@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Model files (too large for Git — download from Colab)
+models/*.pth
+models/*.h5
+models/*.pt
+
+# Data folder (too large for Git — download from Kaggle)
+Data/
+
+# Misc
+*.log
+*.tmp
+doc_content.txt
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,14 @@
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+streamlit
+pillow
+kaggle
+torch
+torchvision
+torchaudio
+pyinstaller
+twine
+build
