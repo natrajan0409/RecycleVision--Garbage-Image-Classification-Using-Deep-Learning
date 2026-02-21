@@ -10,9 +10,8 @@ venv/
 env/
 .env
 
-# Jupyter
+# Jupyter checkpoints only (notebooks are included)
 .ipynb_checkpoints/
-*.ipynb
 
 # Model files (too large for Git — download from Colab)
 models/*.pth
