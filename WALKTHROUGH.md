@@ -1,4 +1,4 @@
-# ♻️ RecycleVision — Project Workflow Document
+# ♻️ RecycleVision — Project Walkthrough
 **Garbage Image Classification Using Deep Learning**  
 **Tech Stack:** Python · PyTorch · EfficientNetB0 · Streamlit  
 **Final Accuracy: 95.42% Validation | 94% Test**
@@ -35,11 +35,8 @@ GUVI_Recycle/
 ## ✅ STEP 1 — Environment Setup
 
 ```bash
-# Create and activate virtual environment
 python -m venv venv
 venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 
 # Register Jupyter kernel
@@ -75,7 +72,7 @@ plt.figure(figsize=(12, 5))
 plt.bar(class_counts.keys(), class_counts.values(), color='steelblue')
 plt.title("Images per Class"); plt.xticks(rotation=45); plt.tight_layout(); plt.show()
 
-# Sample images grid
+# Sample images grid (3 rows × 4 cols = 12 classes)
 fig, axes = plt.subplots(3, 4, figsize=(16, 10))
 for ax, cls in zip(axes.flatten(), sorted(class_counts)):
     img = Image.open(os.path.join(data_dir, cls, os.listdir(os.path.join(data_dir, cls))[0]))
@@ -85,26 +82,30 @@ plt.tight_layout(); plt.show()
 
 ---
 
-## ✅ STEP 4 — Preprocessing & Data Loading
+## ✅ STEP 4 — Preprocessing & Data Augmentation
 
 ```python
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 
+# Training: with augmentation
 train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomRotation(20),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2),
+    transforms.RandomHorizontalFlip(),       # Augmentation
+    transforms.RandomRotation(20),           # Augmentation
+    transforms.ColorJitter(brightness=0.2, contrast=0.2),  # Augmentation
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
+
+# Validation/Test: NO augmentation
 val_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
+# Split: 80% Train / 10% Val / 10% Test
 full_dataset = datasets.ImageFolder(root=data_dir, transform=train_transforms)
 total = len(full_dataset)
 train_size, val_size = int(0.8*total), int(0.1*total)
@@ -130,14 +131,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
 for param in model.parameters():
-    param.requires_grad = False
+    param.requires_grad = False   # Freeze base layers
 
 model.classifier = nn.Sequential(
     nn.Dropout(p=0.4),
     nn.Linear(model.classifier[1].in_features, 256),
     nn.ReLU(),
     nn.Dropout(p=0.3),
-    nn.Linear(256, 12)
+    nn.Linear(256, 12)   # 12 classes
 )
 model = model.to(device)
 criterion = nn.CrossEntropyLoss()
@@ -155,9 +156,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs=10
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(images)
+            outputs = model(images)            # Forward pass
             loss = criterion(outputs, labels)
-            loss.backward()
+            loss.backward()                    # Backward pass
             optimizer.step()
             _, predicted = outputs.max(1)
             correct += predicted.eq(labels).sum().item()
@@ -196,7 +197,7 @@ train_model(model, train_loader, val_loader, criterion, optimizer, epochs=10)
 # 🏆 Best Val Accuracy: 95.42%
 ```
 
-> 💡 Training done on **Google Colab T4 GPU** (~1–2 min/epoch)
+> 💡 Trained on **Google Colab T4 GPU** (~1–2 min/epoch)
 
 ---
 
@@ -232,8 +233,6 @@ plt.title("Confusion Matrix"); plt.tight_layout(); plt.show()
 | Metric | Score |
 |--------|-------|
 | **Test Accuracy** | **94%** ✅ |
-| Macro Avg Precision | 92% |
-| Macro Avg Recall | 92% |
 | Macro Avg F1 | 92% |
 
 | Class | F1 | Class | F1 |
@@ -247,7 +246,7 @@ plt.title("Confusion Matrix"); plt.tight_layout(); plt.show()
 
 ---
 
-## ✅ STEP 7 — Download Model
+## ✅ STEP 7 — Download & Deploy Model
 
 ```python
 # In Google Colab
@@ -258,7 +257,7 @@ Place at: `models/best_model.pth`
 
 ---
 
-## ✅ STEP 8 — Run Streamlit App
+## ✅ STEP 8 — Streamlit App
 
 ```bash
 venv\Scripts\activate
@@ -266,11 +265,7 @@ streamlit run app.py
 ```
 Opens at: `http://localhost:8501`
 
-**App features:**
-- 📸 Upload garbage image
-- 🔍 Predict class + confidence %
-- 🏆 Top 3 predictions
-- ♻️ Recycling tip per class
+**Features:** Upload image → Predict class → Show confidence + Top 3 + Recycling tip
 
 ---
 
@@ -278,9 +273,9 @@ Opens at: `http://localhost:8501`
 
 | Decision | Reason |
 |----------|--------|
-| PyTorch over TensorFlow | Python 3.14 incompatibility with TF |
+| PyTorch over TensorFlow | Python 3.14 incompatible with TF |
 | EfficientNetB0 | Best accuracy/speed ratio |
 | 2-phase training | Phase 1 learns task; Phase 2 fine-tunes |
 | 12-class dataset | More data → better generalization |
 | Google Colab T4 GPU | 10–20x faster than local CPU |
-| ImageNet normalization | Required for pretrained model |
+| ImageNet normalization | Required for pretrained model weights |
