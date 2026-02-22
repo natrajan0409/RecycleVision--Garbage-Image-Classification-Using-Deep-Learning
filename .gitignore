@@ -9,6 +9,10 @@ __pycache__/
 venv/
 env/
 .env
+venv_cuda/
+venv_cpu/
+
+
 
 # Jupyter checkpoints only (notebooks are included)
 .ipynb_checkpoints/
